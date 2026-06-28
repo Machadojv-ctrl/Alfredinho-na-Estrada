@@ -1,13 +1,23 @@
 {
-  "name": "Pílulas — Dep. Alfredinho",
-  "short_name": "Pílulas",
-  "description": "Consulta de pílulas por município e categoria para agendas de campanha.",
+  "name": "Alfredinho na Estrada",
+  "short_name": "Alfredinho",
+  "description": "Pílulas de campanha por município e categoria.",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f3f5f4",
-  "theme_color": "#0d6e4e",
+  "background_color": "#faf5f5",
+  "theme_color": "#cc0000",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }

@@ -523,7 +523,7 @@ body {
       <button class="btn btn-ghost" title="Atualizar" onclick="carregar(true)">↻</button>
       <button class="btn btn-ghost" id="btnLogin" onclick="abrirLogin()">🔐</button>
       <button class="btn btn-perigo" id="btnLogout" onclick="logout()" hidden>Sair</button>
-      <button class="btn btn-ghost" id="installBtn" hidden>⬇</button>
+      <button class="btn btn-ghost" id="installBtn" onclick="abrirInstalar()">📲</button>
     </div>
   </div>
   <div class="filtros">
@@ -941,7 +941,21 @@ if ('serviceWorker' in navigator) {
 /* ── INSTALAR APP ── */
 let deferredPrompt = null;
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || !!navigator.standalone;
+
+function abrirInstalar() {
+  if (isStandalone) return; // já instalado, nada a fazer
+
+  if (deferredPrompt) {
+    // Android com prompt nativo disponível — dispara direto
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+    return;
+  }
+
+  // iOS ou desktop sem prompt — abre modal com instruções
+  document.getElementById('modalInstalar').classList.add('aberto');
+}
 
 function fecharBanner() {
   document.getElementById('bannerInstalar').classList.remove('visivel');
@@ -960,6 +974,10 @@ async function instalarApp() {
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
+  // Atualiza botão para mostrar que tem prompt nativo
+  const btn = document.getElementById('installBtn');
+  if (btn) { btn.title = 'Instalar app'; }
+  // Banner automático após 2,5s
   if (!isStandalone && !sessionStorage.getItem('bannerDismissed')) {
     setTimeout(() => document.getElementById('bannerInstalar').classList.add('visivel'), 2500);
   }
@@ -968,14 +986,33 @@ window.addEventListener('beforeinstallprompt', e => {
 window.addEventListener('appinstalled', () => {
   fecharBanner();
   deferredPrompt = null;
+  document.getElementById('installBtn').style.display = 'none';
 });
 
-// iOS: mostrar botão no header que abre modal
-if (isIOS && !isStandalone) {
-  document.getElementById('installBtn').hidden = false;
-  document.getElementById('installBtn').textContent = '📲 Instalar';
-  document.getElementById('installBtn').onclick = () =>
-    document.getElementById('modalInstalar').classList.add('aberto');
+// Esconde botão se já estiver instalado
+if (isStandalone) {
+  document.getElementById('installBtn').style.display = 'none';
+}
+
+// Ajusta modal de instruções para iOS vs desktop
+if (!isIOS) {
+  const titulo = document.querySelector('#modalInstalar .modal-titulo');
+  if (titulo) titulo.textContent = '📲 Instalar no celular';
+  const steps = document.querySelector('#modalInstalar .ios-steps');
+  if (steps) steps.innerHTML = \`
+    <div class="ios-step">
+      <div class="ios-step-num">1</div>
+      <div class="ios-step-txt"><strong>Android Chrome:</strong> toque nos 3 pontos (⋮) no canto superior direito</div>
+    </div>
+    <div class="ios-step">
+      <div class="ios-step-num">2</div>
+      <div class="ios-step-txt">Toque em <strong>"Adicionar à tela inicial"</strong> ou <strong>"Instalar app"</strong></div>
+    </div>
+    <div class="ios-step">
+      <div class="ios-step-num">3</div>
+      <div class="ios-step-txt"><strong>iPhone Safari:</strong> toque em Compartilhar (📤) → <strong>"Adicionar à Tela de Início"</strong></div>
+    </div>
+  \`;
 }
 </script>
 
