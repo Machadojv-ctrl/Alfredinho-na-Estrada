@@ -913,10 +913,40 @@ if ('serviceWorker' in navigator) {
   </div>
 </div>
 
-<!-- ── MODAL INSTALAR (iOS) ── -->
+<!-- ── MODAL INSTALAR ── -->
 <div class="modal-overlay" id="modalInstalar">
   <div class="modal-box">
-    <div class="modal-titulo">📱 Instalar no iPhone</div>
+    <div class="modal-titulo">📲 Instalar app</div>
+
+    <button id="btnInstalarNativo" onclick="tentarInstalar()" class="btn btn-salvar"
+      style="display:none; width:100%; padding:13px; font-size:15px; border-radius:8px; margin-bottom:4px;">
+      ⬇ Instalar agora
+    </button>
+
+    <p style="font-family:var(--font-corpo); font-size:13px; color:var(--cinza-medio); margin: 0;">
+      Ou siga os passos para o seu celular:
+    </p>
+
+    <div class="ios-steps">
+      <div class="ios-step">
+        <div class="ios-step-num">A</div>
+        <div class="ios-step-txt">
+          <strong>Android (Chrome):</strong> toque nos 3 pontos (⋮) → <strong>"Instalar app"</strong> ou <strong>"Adicionar à tela inicial"</strong>
+        </div>
+      </div>
+      <div class="ios-step">
+        <div class="ios-step-num">B</div>
+        <div class="ios-step-txt">
+          <strong>iPhone (Safari):</strong> toque em Compartilhar (📤) → role para baixo → <strong>"Adicionar à Tela de Início"</strong> → Adicionar
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-btns" style="margin-top:4px;">
+      <button class="btn btn-cinza" onclick="fecharModal('modalInstalar')">Fechar</button>
+    </div>
+  </div>
+</div>
     <div class="ios-steps">
       <div class="ios-step">
         <div class="ios-step-num">1</div>
@@ -943,18 +973,28 @@ let deferredPrompt = null;
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || !!navigator.standalone;
 
+// Botão sempre abre o modal — modal decide o que mostrar
 function abrirInstalar() {
-  if (isStandalone) return; // já instalado, nada a fazer
-
+  const btnNativo = document.getElementById('btnInstalarNativo');
   if (deferredPrompt) {
-    // Android com prompt nativo disponível — dispara direto
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
-    return;
+    btnNativo.style.display = 'block';
+  } else {
+    btnNativo.style.display = 'none';
   }
-
-  // iOS ou desktop sem prompt — abre modal com instruções
   document.getElementById('modalInstalar').classList.add('aberto');
+}
+
+async function tentarInstalar() {
+  if (!deferredPrompt) return;
+  try {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') fecharModal('modalInstalar');
+    deferredPrompt = null;
+    document.getElementById('btnInstalarNativo').style.display = 'none';
+  } catch(e) {
+    console.log('Prompt error:', e);
+  }
 }
 
 function fecharBanner() {
@@ -974,10 +1014,6 @@ async function instalarApp() {
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
-  // Atualiza botão para mostrar que tem prompt nativo
-  const btn = document.getElementById('installBtn');
-  if (btn) { btn.title = 'Instalar app'; }
-  // Banner automático após 2,5s
   if (!isStandalone && !sessionStorage.getItem('bannerDismissed')) {
     setTimeout(() => document.getElementById('bannerInstalar').classList.add('visivel'), 2500);
   }
@@ -989,30 +1025,8 @@ window.addEventListener('appinstalled', () => {
   document.getElementById('installBtn').style.display = 'none';
 });
 
-// Esconde botão se já estiver instalado
 if (isStandalone) {
   document.getElementById('installBtn').style.display = 'none';
-}
-
-// Ajusta modal de instruções para iOS vs desktop
-if (!isIOS) {
-  const titulo = document.querySelector('#modalInstalar .modal-titulo');
-  if (titulo) titulo.textContent = '📲 Instalar no celular';
-  const steps = document.querySelector('#modalInstalar .ios-steps');
-  if (steps) steps.innerHTML = \`
-    <div class="ios-step">
-      <div class="ios-step-num">1</div>
-      <div class="ios-step-txt"><strong>Android Chrome:</strong> toque nos 3 pontos (⋮) no canto superior direito</div>
-    </div>
-    <div class="ios-step">
-      <div class="ios-step-num">2</div>
-      <div class="ios-step-txt">Toque em <strong>"Adicionar à tela inicial"</strong> ou <strong>"Instalar app"</strong></div>
-    </div>
-    <div class="ios-step">
-      <div class="ios-step-num">3</div>
-      <div class="ios-step-txt"><strong>iPhone Safari:</strong> toque em Compartilhar (📤) → <strong>"Adicionar à Tela de Início"</strong></div>
-    </div>
-  \`;
 }
 </script>
 
