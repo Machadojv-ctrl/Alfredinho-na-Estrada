@@ -423,86 +423,6 @@ body {
   display: none;
 }
 
-/* ── BANNER INSTALAR ──────────────────────── */
-#bannerInstalar {
-  display: none;
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  z-index: 300;
-  padding: 12px 16px 24px;
-  background: #fff;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
-  border-top: 3px solid var(--vermelho);
-  animation: slideUp 0.35s ease;
-}
-#bannerInstalar.visivel { display: flex; align-items: center; gap: 12px; }
-
-@keyframes slideUp {
-  from { transform: translateY(100%); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
-}
-
-.banner-texto { flex: 1; }
-.banner-titulo {
-  font-family: var(--font-titulo);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--cinza-escuro);
-  text-transform: uppercase;
-}
-.banner-sub {
-  font-family: var(--font-corpo);
-  font-size: 12px;
-  color: var(--cinza-medio);
-  margin-top: 2px;
-}
-.banner-acoes { display: flex; gap: 8px; flex-shrink: 0; }
-
-.btn-instalar {
-  background: var(--vermelho);
-  color: #fff;
-  padding: 9px 16px;
-  border-radius: 8px;
-  font-family: var(--font-label);
-  font-size: 13px;
-  font-weight: 700;
-  border: none;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.btn-fechar-banner {
-  background: var(--borda);
-  color: var(--cinza-medio);
-  padding: 9px 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  border: none;
-  cursor: pointer;
-}
-
-/* ── MODAL INSTALAR IOS ───────────────────── */
-.ios-steps { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
-.ios-step  { display: flex; align-items: flex-start; gap: 10px; }
-.ios-step-num {
-  background: var(--vermelho);
-  color: #fff;
-  font-family: var(--font-titulo);
-  font-size: 14px;
-  font-weight: 700;
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.ios-step-txt {
-  font-family: var(--font-corpo);
-  font-size: 14px;
-  color: var(--cinza-escuro);
-  line-height: 1.5;
-  padding-top: 3px;
-}
-.ios-step-txt strong { color: var(--vermelho); }
 
 </style>
 </head>
@@ -900,127 +820,25 @@ if ('serviceWorker' in navigator) {
 </script>
 
 
-<!-- ── BANNER INSTALAR (Android) ── -->
-<div id="bannerInstalar">
-  <img src="alfredinho-mascote.png" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">
-  <div class="banner-texto">
-    <div class="banner-titulo">Instale o app!</div>
-    <div class="banner-sub">Acesse offline, direto da tela inicial</div>
-  </div>
-  <div class="banner-acoes">
-    <button class="btn-instalar" onclick="instalarApp()">Instalar</button>
-    <button class="btn-fechar-banner" onclick="fecharBanner()">✕</button>
-  </div>
-</div>
-
-<!-- ── MODAL INSTALAR ── -->
-<div class="modal-overlay" id="modalInstalar">
-  <div class="modal-box">
-    <div class="modal-titulo">📲 Instalar app</div>
-
-    <button id="btnInstalarNativo" onclick="tentarInstalar()" class="btn btn-salvar"
-      style="display:none; width:100%; padding:13px; font-size:15px; border-radius:8px; margin-bottom:4px;">
-      ⬇ Instalar agora
-    </button>
-
-    <p style="font-family:var(--font-corpo); font-size:13px; color:var(--cinza-medio); margin: 0;">
-      Ou siga os passos para o seu celular:
-    </p>
-
-    <div class="ios-steps">
-      <div class="ios-step">
-        <div class="ios-step-num">A</div>
-        <div class="ios-step-txt">
-          <strong>Android (Chrome):</strong> toque nos 3 pontos (⋮) → <strong>"Instalar app"</strong> ou <strong>"Adicionar à tela inicial"</strong>
-        </div>
-      </div>
-      <div class="ios-step">
-        <div class="ios-step-num">B</div>
-        <div class="ios-step-txt">
-          <strong>iPhone (Safari):</strong> toque em Compartilhar (📤) → role para baixo → <strong>"Adicionar à Tela de Início"</strong> → Adicionar
-        </div>
-      </div>
-    </div>
-
-    <div class="modal-btns" style="margin-top:4px;">
-      <button class="btn btn-cinza" onclick="fecharModal('modalInstalar')">Fechar</button>
-    </div>
-  </div>
-</div>
-    <div class="ios-steps">
-      <div class="ios-step">
-        <div class="ios-step-num">1</div>
-        <div class="ios-step-txt">Toque no botão <strong>Compartilhar</strong> (📤) na barra inferior do Safari</div>
-      </div>
-      <div class="ios-step">
-        <div class="ios-step-num">2</div>
-        <div class="ios-step-txt">Role a lista e toque em <strong>"Adicionar à Tela de Início"</strong></div>
-      </div>
-      <div class="ios-step">
-        <div class="ios-step-num">3</div>
-        <div class="ios-step-txt">Toque em <strong>"Adicionar"</strong> no canto superior direito</div>
-      </div>
-    </div>
-    <div class="modal-btns" style="margin-top:4px;">
-      <button class="btn btn-cinza" onclick="fecharModal('modalInstalar')">Fechar</button>
-    </div>
-  </div>
-</div>
 
 <script>
-/* ── INSTALAR APP ── */
 let deferredPrompt = null;
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || !!navigator.standalone;
 
-// Botão sempre abre o modal — modal decide o que mostrar
 function abrirInstalar() {
-  const btnNativo = document.getElementById('btnInstalarNativo');
-  if (deferredPrompt) {
-    btnNativo.style.display = 'block';
-  } else {
-    btnNativo.style.display = 'none';
-  }
-  document.getElementById('modalInstalar').classList.add('aberto');
-}
-
-async function tentarInstalar() {
-  if (!deferredPrompt) return;
-  try {
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') fecharModal('modalInstalar');
-    deferredPrompt = null;
-    document.getElementById('btnInstalarNativo').style.display = 'none';
-  } catch(e) {
-    console.log('Prompt error:', e);
-  }
-}
-
-function fecharBanner() {
-  document.getElementById('bannerInstalar').classList.remove('visivel');
-  sessionStorage.setItem('bannerDismissed','1');
-}
-
-async function instalarApp() {
   if (deferredPrompt) {
     deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
+    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
   }
-  fecharBanner();
 }
 
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
-  if (!isStandalone && !sessionStorage.getItem('bannerDismissed')) {
-    setTimeout(() => document.getElementById('bannerInstalar').classList.add('visivel'), 2500);
-  }
+  document.getElementById('installBtn').style.display = '';
 });
 
 window.addEventListener('appinstalled', () => {
-  fecharBanner();
   deferredPrompt = null;
   document.getElementById('installBtn').style.display = 'none';
 });
