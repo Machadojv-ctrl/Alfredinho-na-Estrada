@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d6e4e">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Pílulas">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Pílulas — Dep. Alfredinho</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --verde:        #0d6e4e;
+  --verde-hover:  #0a5a3f;
+  --verde-bg:     #eef6f2;
+  --amarelo:      #e8a020;
+  --cinza-escuro: #111827;
+  --cinza-medio:  #4b5563;
+  --cinza-claro:  #9ca3af;
+  --borda:        #e5e7eb;
+  --fundo:        #f3f5f4;
+  --branco:       #ffffff;
+  --vermelho:     #dc2626;
+  --sombra:       0 1px 4px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.05);
+  --radius:       12px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  background: var(--fundo);
+  color: var(--cinza-escuro);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── HEADER ─────────────────────────────── */
+.header {
+  background: var(--verde);
+  padding: 14px 16px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+}
+
+.header-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.header-titulo {
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.3px;
+}
+
+.header-titulo span {
+  opacity: 0.75;
+  font-weight: 500;
+  font-size: 13px;
+  display: block;
+  letter-spacing: 0;
+}
+
+.header-acoes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── FILTROS ─────────────────────────────── */
+.filtros { display: flex; flex-direction: column; gap: 7px; }
+
+.filtros input,
+.filtros select {
+  width: 100%;
+  padding: 9px 11px;
+  font-size: 14px;
+  border: none;
+  border-radius: 7px;
+  background: rgba(255,255,255,0.14);
+  color: #fff;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: inherit;
+}
+
+.filtros input::placeholder { color: rgba(255,255,255,0.65); }
+.filtros select option { color: #111; background: #fff; }
+
+.filtros-linha { display: flex; gap: 7px; }
+.filtros-linha select { flex: 1; }
+
+/* ── BOTÕES ─────────────────────────────── */
+.btn {
+  padding: 7px 12px;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: opacity 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active { opacity: 0.82; transform: scale(0.97); }
+.btn:disabled { opacity: 0.5; cursor: wait; }
+
+.btn-ghost  { background: rgba(255,255,255,0.18); color: #fff; }
+.btn-salvar { background: #16a34a; color: #fff; }
+.btn-verde  { background: var(--verde); color: #fff; }
+.btn-cinza  { background: #6b7280; color: #fff; }
+.btn-perigo { background: var(--vermelho); color: #fff; }
+
+/* ── CONTAINER ───────────────────────────── */
+.container {
+  padding: 14px 14px 32px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+/* ── ESTADO VAZIO / LOADING ──────────────── */
+.estado {
+  text-align: center;
+  padding: 64px 20px;
+  color: var(--cinza-claro);
+}
+.estado-icone { font-size: 44px; margin-bottom: 10px; }
+.estado-texto { font-size: 14px; color: var(--cinza-medio); }
+
+.contador {
+  font-size: 12px;
+  color: var(--cinza-claro);
+  text-align: center;
+  margin-bottom: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* ── CARD ────────────────────────────────── */
+.card {
+  background: var(--branco);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  box-shadow: var(--sombra);
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.38s ease, transform 0.38s ease;
+  will-change: opacity, transform;
+}
+.card.visivel { opacity: 1; transform: translateY(0); }
+
+.card-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 0;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 20px;
+  color: #fff;
+}
+
+.tag-municipio {
+  font-size: 12px;
+  color: var(--cinza-claro);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.card-titulo {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--cinza-escuro);
+  padding: 8px 14px 2px;
+  line-height: 1.35;
+}
+
+/* ── STAT BLOCK ─────────────────────────── */
+.card-stats {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px 2px;
+}
+
+.stat {
+  flex: 1;
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.stat-principal {
+  background: var(--verde-bg);
+  border-left: 3px solid var(--verde);
+}
+
+.stat-comparativo {
+  background: #fafafa;
+  border: 1px solid var(--borda);
+}
+
+.stat-numero {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--amarelo);
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+.stat-comparativo .stat-numero {
+  font-size: 16px;
+  color: var(--cinza-claro);
+  font-weight: 700;
+}
+
+.stat-rotulo {
+  font-size: 11px;
+  color: var(--cinza-medio);
+  margin-top: 3px;
+  line-height: 1.3;
+  font-weight: 500;
+}
+
+.stat-comparativo .stat-rotulo { color: var(--cinza-claro); }
+
+.stat-vs {
+  display: flex;
+  align-items: center;
+  color: var(--borda);
+  font-size: 13px;
+  font-weight: 700;
+  padding-top: 2px;
+}
+
+/* ── PÍLULA CURTA ────────────────────────── */
+.card-pilula {
+  padding: 10px 14px 12px;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.6;
+  border-top: 1px solid var(--verde-bg);
+  margin-top: 8px;
+}
+
+/* ── IMAGEM ──────────────────────────────── */
+.card-imagem-wrap {
+  margin: 0 14px 14px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--borda);
+  background: #f9fafb;
+}
+.card-imagem-wrap img {
+  width: 100%;
+  display: block;
+  max-height: 260px;
+  object-fit: contain;
+}
+
+/* ── RODAPÉ ADMIN ────────────────────────── */
+.card-rodape {
+  padding: 0 14px 12px;
+  display: flex;
+  gap: 8px;
+}
+
+/* ── PAGINAÇÃO ───────────────────────────── */
+.paginacao {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin: 16px 0 8px;
+  flex-wrap: wrap;
+}
+.paginacao button {
+  padding: 7px 12px;
+  border: 1.5px solid var(--verde);
+  background: var(--branco);
+  color: var(--verde);
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.paginacao button.ativa { background: var(--verde); color: #fff; }
+.paginacao button:disabled { opacity: 0.35; cursor: default; }
+
+/* ── MODAL ───────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 400;
+  justify-content: center;
+  align-items: flex-end;
+}
+.modal-overlay.aberto { display: flex; }
+
+.modal-box {
+  background: var(--branco);
+  border-radius: 16px 16px 0 0;
+  padding: 20px 18px 30px;
+  width: 100%;
+  max-width: 620px;
+  max-height: 92vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.modal-titulo {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--cinza-escuro);
+}
+
+.campo label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--cinza-medio);
+  margin-bottom: 5px;
+}
+
+.campo input,
+.campo textarea,
+.campo select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1.5px solid var(--borda);
+  border-radius: 8px;
+  outline: none;
+  font-family: inherit;
+  color: var(--cinza-escuro);
+  background: var(--branco);
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+}
+.campo input:focus,
+.campo textarea:focus,
+.campo select:focus { border-color: var(--verde); }
+
+.campo textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+.campo-hint {
+  font-size: 11px;
+  color: var(--cinza-claro);
+  margin-top: 3px;
+}
+
+.modal-btns { display: flex; gap: 8px; }
+.modal-btns .btn { flex: 1; padding: 12px; font-size: 14px; }
+
+.erro-msg {
+  font-size: 13px;
+  color: var(--vermelho);
+  font-weight: 600;
+  display: none;
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="header">
+  <div class="header-topo">
+    <div class="header-titulo">
+      Pílulas
+      <span>Dep. Alfredinho</span>
+    </div>
+    <div class="header-acoes">
+      <button class="btn btn-ghost" id="btnNovo" onclick="abrirNovo()" hidden>+ Novo</button>
+      <button class="btn btn-ghost" title="Atualizar dados" onclick="carregar(true)">↻</button>
+      <button class="btn btn-ghost" id="btnLogin" onclick="abrirLogin()">🔐</button>
+      <button class="btn btn-perigo" id="btnLogout" onclick="logout()" hidden>Sair</button>
+      <button class="btn btn-ghost" id="installBtn" hidden>⬇</button>
+    </div>
+  </div>
+  <div class="filtros">
+    <input type="text" id="searchInput" placeholder="🔍 Buscar em qualquer campo…">
+    <div class="filtros-linha">
+      <select id="filtroMunicipio" onchange="onMunicipioChange()">
+        <option value="">🏙 Todos os municípios</option>
+      </select>
+      <select id="filtroCategoria" onchange="onCategoriaChange()">
+        <option value="">📌 Todas as categorias</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- ── CONTEÚDO ── -->
+<div class="container">
+  <div id="lista">
+    <div class="estado">
+      <div class="estado-icone">⏳</div>
+      <div class="estado-texto">Carregando pílulas…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL LOGIN ── -->
+<div class="modal-overlay" id="modalLogin">
+  <div class="modal-box">
+    <div class="modal-titulo">🔐 Acesso restrito</div>
+    <div class="campo">
+      <label>Senha</label>
+      <input type="password" id="inputSenha" placeholder="Digite a senha"
+        onkeydown="if(event.key==='Enter') confirmarLogin()">
+    </div>
+    <span class="erro-msg" id="erroSenha">Senha incorreta. Tente novamente.</span>
+    <div class="modal-btns">
+      <button class="btn btn-salvar" id="btnConfLogin" onclick="confirmarLogin()">Entrar</button>
+      <button class="btn btn-cinza" onclick="fecharModal('modalLogin')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL EDIÇÃO ── -->
+<div class="modal-overlay" id="modalEdicao">
+  <div class="modal-box">
+    <div class="modal-titulo" id="tituloModalEdicao">Nova Pílula</div>
+
+    <div class="campo">
+      <label>Município *</label>
+      <input type="text" id="edit_municipio" placeholder="Ex: Campinas">
+    </div>
+    <div class="campo">
+      <label>Categoria *</label>
+      <input type="text" id="edit_categoria" placeholder="Ex: Saúde, Educação, Habitação…">
+    </div>
+    <div class="campo">
+      <label>Título *</label>
+      <input type="text" id="edit_titulo" placeholder="Manchete curta e direta">
+    </div>
+    <div class="campo">
+      <label>Número destaque *</label>
+      <input type="text" id="edit_numero_destaque" placeholder="Ex: +329,9% ou R$ 10,9 B/ano">
+    </div>
+    <div class="campo">
+      <label>Rótulo do número *</label>
+      <input type="text" id="edit_rotulo_destaque" placeholder="Ex: no Bolsa Família (Lula)">
+    </div>
+    <div class="campo">
+      <label>Dado comparativo <em style="text-transform:none;font-weight:400">(opcional)</em></label>
+      <input type="text" id="edit_dado_comparativo" placeholder="Ex: R$ 103M/ano (Bolsonaro)">
+      <div class="campo-hint">Deixe vazio se não houver comparação com período anterior.</div>
+    </div>
+    <div class="campo">
+      <label>Pílula curta *</label>
+      <textarea id="edit_pilula_curta" placeholder="2–3 linhas para o deputado ler em agenda de campanha. Sem números soltos — texto corrido e impactante."></textarea>
+    </div>
+    <div class="campo">
+      <label>URL da imagem <em style="text-transform:none;font-weight:400">(opcional)</em></label>
+      <input type="text" id="edit_imagem_url" placeholder="https://drive.google.com/uc?id=…">
+      <div class="campo-hint">Use o link direto do Google Drive (uc?id=…).</div>
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn btn-salvar" id="btnSalvarEdicao" onclick="salvarEdicao()">Salvar</button>
+      <button class="btn btn-perigo" id="btnExcluirEdicao" onclick="excluirEdicao()" hidden>Excluir</button>
+      <button class="btn btn-cinza" onclick="fecharModal('modalEdicao')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── CONFIGURAÇÃO ─────────────────────────────────────── */
+const API_URL = "https://script.google.com/macros/s/AKfycbyzuUG-ek0N28TDejepTeA8IJNkiW5I5nhsLLTEEwNinjX8H7zUB_ikwSBp-nHftlc/exec";
+
+const CORES_CATEGORIA = {
+  'bolsa família':        '#15803d',
+  'saúde':               '#b91c1c',
+  'infraestrutura':      '#c2410c',
+  'habitação':           '#6d28d9',
+  'educação':            '#1d4ed8',
+  'ciência & tecnologia':'#0e7490',
+  'ciência e tecnologia':'#0e7490',
+  'meio ambiente':       '#166534',
+};
+
+function corDaCategoria(cat) {
+  return CORES_CATEGORIA[(cat || '').toLowerCase()] || '#0d6e4e';
+}
+
+/* ── ESTADO ───────────────────────────────────────────── */
+let dados        = [];
+let filtroTexto  = '';
+let filtroMuni   = '';
+let filtroCat    = '';
+let pagina       = 0;
+let editIdx      = null;
+const POR_PAGINA = 8;
+let logado = sessionStorage.getItem('logado') === 'true';
+
+/* ── UTILITÁRIOS ──────────────────────────────────────── */
+function norm(v) {
+  return String(v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+function hoje() {
+  return new Date().toLocaleDateString('pt-BR');
+}
+
+/* ── AUTH ─────────────────────────────────────────────── */
+function atualizarUI() {
+  document.getElementById('btnNovo').hidden   = !logado;
+  document.getElementById('btnLogin').hidden  = logado;
+  document.getElementById('btnLogout').hidden = !logado;
+}
+
+function abrirLogin() {
+  document.getElementById('modalLogin').classList.add('aberto');
+  setTimeout(() => document.getElementById('inputSenha').focus(), 180);
+}
+
+async function confirmarLogin() {
+  const btn   = document.getElementById('btnConfLogin');
+  const senha = document.getElementById('inputSenha').value.trim();
+  if (!senha) return;
+
+  btn.disabled    = true;
+  btn.textContent = 'Verificando…';
+
+  try {
+    const resp = await fetch(API_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body:    JSON.stringify({ action: 'login', senha })
+    });
+    const json = await resp.json();
+
+    if (json.ok) {
+      logado = true;
+      sessionStorage.setItem('logado', 'true');
+      fecharModal('modalLogin');
+      atualizarUI();
+      render();
+    } else {
+      document.getElementById('erroSenha').style.display = 'block';
+    }
+  } catch {
+    document.getElementById('erroSenha').style.display = 'block';
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = 'Entrar';
+  }
+}
+
+function logout() {
+  logado = false;
+  sessionStorage.removeItem('logado');
+  atualizarUI();
+  render();
+}
+
+function fecharModal(id) {
+  document.getElementById(id).classList.remove('aberto');
+  if (id === 'modalLogin') {
+    document.getElementById('inputSenha').value        = '';
+    document.getElementById('erroSenha').style.display = 'none';
+  }
+}
+
+/* ── API ──────────────────────────────────────────────── */
+async function apiGet() {
+  const resp = await fetch(API_URL);
+  const json = await resp.json();
+  if (!json.ok) throw new Error(json.error || 'Erro ao carregar');
+  return json.data || [];
+}
+
+async function apiUpsert(item) {
+  const resp = await fetch(API_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body:    JSON.stringify({ action: 'upsert', item })
+  });
+  const json = await resp.json();
+  if (!json.ok) throw new Error(json.error || 'Erro ao salvar');
+  return json.data;
+}
+
+async function apiDelete(id) {
+  const resp = await fetch(API_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body:    JSON.stringify({ action: 'delete', id })
+  });
+  const json = await resp.json();
+  if (!json.ok) throw new Error(json.error || 'Erro ao excluir');
+  return json.data;
+}
+
+/* ── CARREGAR ─────────────────────────────────────────── */
+async function carregar(forcar = false) {
+  if (!forcar) {
+    document.getElementById('lista').innerHTML =
+      '<div class="estado"><div class="estado-icone">⏳</div><div class="estado-texto">Carregando pílulas…</div></div>';
+  }
+  try {
+    dados = await apiGet();
+    popularFiltroMunicipio();
+    render();
+  } catch (err) {
+    document.getElementById('lista').innerHTML =
+      '<div class="estado"><div class="estado-icone">⚠️</div><div class="estado-texto">Erro ao carregar. Mostrando dados em cache (se disponíveis).</div></div>';
+    console.error(err);
+  }
+}
+
+/* ── FILTROS ──────────────────────────────────────────── */
+function popularFiltroMunicipio() {
+  const munis = [...new Set(dados.map(d => d.municipio).filter(Boolean))].sort();
+  const sel   = document.getElementById('filtroMunicipio');
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">🏙 Todos os municípios</option>';
+  munis.forEach(m => {
+    const o = document.createElement('option');
+    o.value = m; o.textContent = m;
+    sel.appendChild(o);
+  });
+  if (munis.includes(atual)) sel.value = atual;
+  atualizarDropCategoria();
+}
+
+function atualizarDropCategoria() {
+  const muniSel = document.getElementById('filtroMunicipio').value;
+  const fonte   = muniSel ? dados.filter(d => d.municipio === muniSel) : dados;
+  const cats    = [...new Set(fonte.map(d => d.categoria).filter(Boolean))].sort();
+  const sel     = document.getElementById('filtroCategoria');
+  const atual   = sel.value;
+  sel.innerHTML = '<option value="">📌 Todas as categorias</option>';
+  cats.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c; o.textContent = c;
+    sel.appendChild(o);
+  });
+  if (cats.includes(atual)) sel.value = atual;
+  else { sel.value = ''; filtroCat = ''; }
+}
+
+function onMunicipioChange() {
+  filtroMuni = document.getElementById('filtroMunicipio').value;
+  filtroCat  = '';
+  atualizarDropCategoria();
+  pagina = 0;
+  render();
+}
+
+function onCategoriaChange() {
+  filtroCat = document.getElementById('filtroCategoria').value;
+  pagina    = 0;
+  render();
+}
+
+/* ── RENDER ───────────────────────────────────────────── */
+const cardObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visivel');
+      cardObserver.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.04 });
+
+function render() {
+  filtroMuni = document.getElementById('filtroMunicipio').value;
+  filtroCat  = document.getElementById('filtroCategoria').value;
+
+  const tokens = filtroTexto.trim().split(/\s+/).filter(Boolean);
+
+  const filtrados = dados.filter(item => {
+    const muni  = !filtroMuni || item.municipio === filtroMuni;
+    const cat   = !filtroCat  || item.categoria === filtroCat;
+    const texto = norm([item.municipio, item.categoria, item.titulo,
+                        item.pilula_curta, item.numero_destaque,
+                        item.rotulo_destaque, item.dado_comparativo].join(' '));
+    const busca = tokens.every(t => texto.includes(t));
+    return muni && cat && busca;
+  });
+
+  const lista = document.getElementById('lista');
+  lista.innerHTML = '';
+
+  if (filtrados.length === 0) {
+    lista.innerHTML = '<div class="estado"><div class="estado-icone">🔍</div><div class="estado-texto">Nenhuma pílula encontrada para esses filtros.</div></div>';
+    return;
+  }
+
+  /* Contador */
+  const cont = document.createElement('div');
+  cont.className   = 'contador';
+  cont.textContent = `${filtrados.length} pílula${filtrados.length !== 1 ? 's' : ''}`;
+  lista.appendChild(cont);
+
+  /* Paginação */
+  const totalPag = Math.ceil(filtrados.length / POR_PAGINA);
+  if (pagina >= totalPag) pagina = Math.max(0, totalPag - 1);
+  const paginaItems = filtrados.slice(pagina * POR_PAGINA, (pagina + 1) * POR_PAGINA);
+
+  paginaItems.forEach((item, i) => {
+    const idxReal       = dados.indexOf(item);
+    const cor           = corDaCategoria(item.categoria);
+    const temComp       = !!(item.dado_comparativo && item.dado_comparativo.trim());
+    const temImg        = item.imagem_url && item.imagem_url.trim().startsWith('http');
+    const temPilula     = !!(item.pilula_curta && item.pilula_curta.trim());
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.transitionDelay = `${i * 55}ms`;
+
+    card.innerHTML = `
+      <div class="card-cabecalho">
+        <span class="badge" style="background:${cor}">${item.categoria || ''}</span>
+        <span class="tag-municipio">${item.municipio || ''}</span>
+      </div>
+
+      <div class="card-titulo">${item.titulo || ''}</div>
+
+      <div class="card-stats">
+        <div class="stat stat-principal">
+          <div class="stat-numero">${item.numero_destaque || ''}</div>
+          <div class="stat-rotulo">${item.rotulo_destaque || ''}</div>
+        </div>
+        ${temComp ? `
+        <div class="stat-vs">vs</div>
+        <div class="stat stat-comparativo">
+          <div class="stat-numero">${item.dado_comparativo}</div>
+          <div class="stat-rotulo">Período anterior</div>
+        </div>` : ''}
+      </div>
+
+      ${temPilula ? `<div class="card-pilula">${item.pilula_curta}</div>` : ''}
+
+      ${temImg ? `
+      <div class="card-imagem-wrap">
+        <img src="${item.imagem_url}" alt="${item.titulo || 'Gráfico'}" loading="lazy">
+      </div>` : ''}
+
+      ${logado ? `
+      <div class="card-rodape">
+        <button class="btn btn-verde" style="font-size:13px;padding:7px 14px;"
+          onclick="abrirEdicao(${idxReal})">✏️ Editar</button>
+      </div>` : ''}
+    `;
+
+    lista.appendChild(card);
+    cardObserver.observe(card);
+  });
+
+  /* Paginação */
+  if (totalPag > 1) {
+    const nav = document.createElement('div');
+    nav.className = 'paginacao';
+
+    const ant = document.createElement('button');
+    ant.textContent = '←';
+    ant.disabled    = pagina === 0;
+    ant.onclick     = () => { pagina--; render(); window.scrollTo(0,0); };
+    nav.appendChild(ant);
+
+    for (let i = 0; i < totalPag; i++) {
+      const b = document.createElement('button');
+      b.textContent = i + 1;
+      if (i === pagina) b.classList.add('ativa');
+      b.onclick = ((p) => () => { pagina = p; render(); window.scrollTo(0,0); })(i);
+      nav.appendChild(b);
+    }
+
+    const prox = document.createElement('button');
+    prox.textContent = '→';
+    prox.disabled    = pagina === totalPag - 1;
+    prox.onclick     = () => { pagina++; render(); window.scrollTo(0,0); };
+    nav.appendChild(prox);
+
+    lista.appendChild(nav);
+  }
+}
+
+/* ── EDIÇÃO ───────────────────────────────────────────── */
+const CAMPOS = ['municipio','categoria','titulo','numero_destaque',
+                'rotulo_destaque','dado_comparativo','pilula_curta','imagem_url'];
+
+function limparModal() {
+  CAMPOS.forEach(f => document.getElementById('edit_' + f).value = '');
+}
+
+function abrirNovo() {
+  editIdx = null;
+  document.getElementById('tituloModalEdicao').textContent = 'Nova Pílula';
+  document.getElementById('btnExcluirEdicao').hidden = true;
+  limparModal();
+  document.getElementById('modalEdicao').classList.add('aberto');
+}
+
+function abrirEdicao(idx) {
+  editIdx = idx;
+  const item = dados[idx];
+  document.getElementById('tituloModalEdicao').textContent = 'Editar Pílula';
+  document.getElementById('btnExcluirEdicao').hidden = false;
+  CAMPOS.forEach(f => document.getElementById('edit_' + f).value = item[f] || '');
+  document.getElementById('modalEdicao').classList.add('aberto');
+}
+
+async function salvarEdicao() {
+  const btn = document.getElementById('btnSalvarEdicao');
+  btn.disabled    = true;
+  btn.textContent = 'Salvando…';
+
+  try {
+    const item = editIdx !== null ? { ...dados[editIdx] } : { id: '' };
+    CAMPOS.forEach(f => item[f] = document.getElementById('edit_' + f).value.trim());
+    item.dataAtualizacao = hoje();
+
+    const result = await apiUpsert(item);
+    if (result && result.id) item.id = result.id;
+
+    if (editIdx !== null) {
+      dados[editIdx] = item;
+    } else {
+      dados.unshift(item);
+    }
+
+    fecharModal('modalEdicao');
+    popularFiltroMunicipio();
+    render();
+  } catch (err) {
+    alert('Erro ao salvar. Tente novamente.');
+    console.error(err);
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = 'Salvar';
+  }
+}
+
+async function excluirEdicao() {
+  if (editIdx === null) return;
+  const item = dados[editIdx];
+  if (!confirm(`Excluir "${item.titulo || 'esta pílula'}"?`)) return;
+
+  try {
+    if (item.id) await apiDelete(item.id);
+    dados.splice(editIdx, 1);
+    fecharModal('modalEdicao');
+    popularFiltroMunicipio();
+    render();
+  } catch (err) {
+    alert('Erro ao excluir.');
+    console.error(err);
+  }
+}
+
+/* ── BUSCA COM DEBOUNCE ───────────────────────────────── */
+let debounceBusca;
+document.getElementById('searchInput').addEventListener('input', e => {
+  clearTimeout(debounceBusca);
+  debounceBusca = setTimeout(() => {
+    filtroTexto = norm(e.target.value);
+    pagina      = 0;
+    render();
+  }, 140);
+});
+
+/* Fechar modal ao tocar no overlay */
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => {
+    if (e.target === el) fecharModal(el.id);
+  });
+});
+
+/* ── INIT ─────────────────────────────────────────────── */
+carregar();
+atualizarUI();
+</script>
+
+<!-- Service Worker -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      await navigator.serviceWorker.register('./sw.js');
+    } catch (e) {
+      console.error('Service Worker:', e);
+    }
+  });
+}
+</script>
+
+<!-- Install PWA -->
+<script>
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBtn').hidden = false;
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('installBtn').hidden = true;
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBtn').hidden = true;
+});
+</script>
+
+</body>
+</html>
